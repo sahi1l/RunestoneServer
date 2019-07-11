@@ -15,18 +15,13 @@ function gradeIndividualItem() {
     var COL3VAL = COL3.options[COL3.selectedIndex].value;
     
     var rightSideDiv = $('#rightsideGradingTab');
-    //FIX: This seems so clunky
     var student_dict=students;
     var question,sid,student;
     var questions,sstudents;
     if (VAL3 == 'question') {
-        //we know the student must come from column 1 now
         var s_column = document.getElementById("gradingcolumn1");
-        students=s_column.selectedOptions;
+        sstudents=s_column.selectedOptions;
         questions=COL3.selectedOptions;
-//        if (s_column.selectedIndex == -1) {return}  //make sure they've selected a student from column 1
-//        student = s_column.options[s_column.selectedIndex].value; // TODO .value should be sid not name
-//        question = COL3VAL
     }
 
     else if (VAL3 == 'student') {
@@ -39,9 +34,6 @@ function gradeIndividualItem() {
         var q_column = document.getElementById("gradingcolumn2");
         sstudents=COL3.selectedOptions;
         questions=q_column.selectedOptions;
-//        if(q_column.selectedIndex==-1){return} //make sure they've selected a question from column 1
-//        question = q_column.options[q_column.selectedIndex].value;
-//        student=COL3VAL
     }
 
     $(rightSideDiv)[0].style.visibility = 'visible';
@@ -71,11 +63,8 @@ function gradeIndividualItem() {
             divstring+='<input type="submit" value="Save Grade" class="btn btn-primary" /></form>'
             divstring+='<button class="btn btn-default next" type="button">Save and next</button></div>'
             divstring+='</div></div>'
-            rightSideDiv.append(divstring) //FIX: Add the entire 
-            var newdiv=$("#"+newid)
-            console.log(newid)
-            console.log(newdiv)
-            getRightSideGradingDiv(newdiv, question, sid);
+            rightSideDiv.append(divstring)
+            getRightSideGradingDiv($("#"+newid), question, sid);
         }
     }
 }
@@ -299,9 +288,6 @@ function getRightSideGradingDiv(element, acid, studentId) {
     function show(data) {
         // get rid of any other modals -- incase they are just hanging out.
         //jQuery('.modal.modal-grader:not(#modal-template .modal)').remove();
-
-        //FIX: this shouldn't assume there is a single outerRightDiv, but look for children of a div
-        //Replace #outerRightDiv
 
         var rightDiv = jQuery(element);
 
@@ -1491,7 +1477,6 @@ function renderRunestoneComponent(componentSrc, whereDiv, moreOpts) {
      *  The tedious part is calling the right functions to turn the
      *  source into the actual component.
      */
-    //FIX? I have to make sure this doesn't use any absolute references
     patt = /..\/_images/g;
     componentSrc = componentSrc.replace(patt, `/${eBookConfig.app}/static/${eBookConfig.course}/_images`)
     jQuery(`#${whereDiv}`).html(componentSrc);
