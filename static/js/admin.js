@@ -1285,7 +1285,7 @@ function update_assignment(form) {
         form.visible.value = 'F';
     }
     $.getJSON('save_assignment', $(form).serialize() + '&assignment_id=' + getAssignmentId(), function (data) {
-        alert("Assignment Saved");
+        $("#saveindicator").show().delay(1000).fadeOut();
     }).error(function () { alert("huh??") });
 }
 
