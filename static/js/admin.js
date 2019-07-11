@@ -409,16 +409,48 @@ function getRightSideGradingDiv(element, acid, studentId) {
 
 }
 
-
+function makeOption(text,value,disabledQ){
+    var option = document.createElement("option");
+    option.text = text;
+    option.value = value;
+    if(disabledQ != undefined) {
+        $(option).attr("disabled",true);
+    }
+    return option;
+   
+}
+function populateQuestions(select,question_names){
+    question_names.sort()
+    $(select).empty();
+    var chapter="";
+    for (i = 0; i < question_names.length; i++) {
+        var q = question_names[i];
+        var questiontext="";
+        if (q.includes("/")) {//if the question has a / in it, assume it is chapter/subchapter
+            var qL = q.split("/");  
+            if(chapter!=qL[0]){ //if the chapter changes, show it greyed out on a separate line
+                chapter=qL[0];
+                select.add(makeOption(chapter,"",true));
+            }
+            questiontext="   "+qL[1];
+        } else {
+            questiontext=qL[0];
+        };
+            select.add(makeOption(questiontext,question_names[i]));
+    }
+}
 function updateColumn2() {
-    var select1 = document.getElementById("gradingoption1");
-    var val = select1.options[select1.selectedIndex].value;
-    var select = document.getElementById("gradingoption2");
-    var val2 = select.options[select.selectedIndex].value;
-    var select2 = document.getElementById("gradingcolumn1");
-    var column2 = document.getElementById("gradingcolumn2");
-    var selectedval = select2.options[select2.selectedIndex].value;
-    if (val == 'assignment') {
+    var SEL1 = document.getElementById("gradingoption1");
+    var VAL1 = SEL1.options[SEL1.selectedIndex].value;
+    var SEL2 = document.getElementById("gradingoption2");
+    var VAL2 = SEL2.options[SEL2.selectedIndex].value;
+    var COL1 = document.getElementById("gradingcolumn1");
+    var COL2 = document.getElementById("gradingcolumn2");
+    var COL1VAL="";
+    if (COL1.selectedIndex>-1){
+        var COL1VAL = COL1.options[COL1.selectedIndex].value;
+    }
+    if (VAL1 == 'assignment') {
         set_release_button();
         if (getSelectedItem('student') != null) {
             calculateTotals();
@@ -426,33 +458,22 @@ function updateColumn2() {
             document.getElementById('assignmentTotalform').style.visibility = 'hidden';
         }
     }
-    if (val == 'assignment' && val2 == 'question') {
-        $("#gradingcolumn2").empty();
-        var assignments = assignmentinfo;
-        var assignment_names = assignments[selectedval];
-        assignment_names.sort()
-        for (i = 0; i < assignment_names.length; i++) {
-            var q = assignment_names[i];
-            var option = document.createElement("option");
-            option.text = q;
-            option.value = q;
-            column2.add(option);
-
-        }
+    if (VAL1 == 'assignment' && VAL2 == 'question') {
+        populateQuestions(COL2,assignmentinfo[COL1VAL]);
     }
 
-    else if (val == 'chapter' && val2 == 'question') {
-        $("#gradingcolumn2").empty();
-        for (i = 0; i < chapters[selectedval].length; i++) {
+    else if (VAL1 == 'chapter' && VAL2 == 'question') {
+        $(COL2).empty();
+        for (i = 0; i < chapters[COL1VAL].length; i++) {
             var option = document.createElement("option");
-            option.text = chapters[selectedval][i];
-            option.value = chapters[selectedval][i];
-            column2.add(option);
+            option.text = chapters[COL1VAL][i];
+            option.value = chapters[COL1VAL][i];
+            COL2.add(option);
         }
 
     }
 
-    else if (val == 'student') {
+    else if (VAL1 == 'student') {
         if (getSelectedItem('student') != null && getSelectedItem('assignment') != null) {
             calculateTotals();
         } else {
@@ -460,20 +481,20 @@ function updateColumn2() {
         }
     }
 
-    if (val2 != "") {
-        column2.style.visibility = 'visible';
+    if (VAL2 != "") {
+        COL2.style.visibility = 'visible';
     }
 }
 
 function updateColumn3() {
-    var select1 = document.getElementById("gradingoption2");
-    var val = select1.options[select1.selectedIndex].value;
-    var select = document.getElementById("gradingoption3");
-    var val2 = select.options[select.selectedIndex].value;
-    var select2 = document.getElementById("gradingcolumn2");
-    var column3 = document.getElementById("gradingcolumn3");
-    var selectedval = select2.options[select2.selectedIndex].value;
-    if (val == 'assignment') {
+    var SEL2 = document.getElementById("gradingoption2");
+    var VAL2 = SEL2.options[SEL2.selectedIndex].value;
+    var SEL3 = document.getElementById("gradingoption3");
+    var VAL3 = SEL3.options[SEL3.selectedIndex].value;
+    var COL2 = document.getElementById("gradingcolumn2");
+    var COL3 = document.getElementById("gradingcolumn3");
+    var COL2VAL = COL2.options[COL2.selectedIndex].value;
+    if (VAL2 == 'assignment') {
         set_release_button();
         if (getSelectedItem('student') != null && getSelectedItem('assignment') != null) {
             calculateTotals();
@@ -481,36 +502,26 @@ function updateColumn3() {
             document.getElementById('assignmentTotalform').style.visibility = 'hidden';
         }
     }
-    if (val == 'chapter' && val2 == 'question') {
+    if (VAL2 == 'chapter' && VAL3 == 'question') {
         $("#gradingcolumn3").empty();
-        for (i = 0; i < chapters[selectedval].length; i++) {
+        for (i = 0; i < chapters[COL2VAL].length; i++) {
             var option = document.createElement("option");
-            option.text = chapters[selectedval][i];
-            option.value = chapters[selectedval][i];
-            column3.add(option);
+            option.text = chapters[COL2VAL][i];
+            option.value = chapters[COL2VAL][i];
+            COL3.add(option);
         }
     }
 
-    else if (val == 'assignment' && val2 == 'question') {
-        $("#gradingcolumn3").empty();
-        var assignments = assignmentinfo;
-        for (i = 0; i < assignments[selectedval].length; i++) {
-            var q = assignments[selectedval][i];
-            var option = document.createElement("option");
-            option.text = q;
-            option.value = q;
-            column3.add(option);
-
-        }
-
+    else if (VAL2 == 'assignment' && VAL3 == 'question') {
+        populateQuestions(COL3,assignmentinfo[COL2VAL]);
     }
 
-    if (val2 != "") {
-        var lastcolval = column3.selectedIndex;
+    if (VAL3 != "") {
+        var lastcolval = COL3.selectedIndex;
         if (lastcolval != -1) {
             gradeIndividualItem();
         }
-        column3.style.visibility = 'visible';
+        COL3.style.visibility = 'visible';
     }
 
 }
@@ -606,16 +617,27 @@ function pickedChapters(column) {
 
 }
 
-
+function makeOptions(select,texts){
+    $(select).children().each(
+        function(i,option){
+            if(texts.includes(option.value)){
+                $(option).show();
+            } else {
+                $(option).hide();//("disabled",true);
+            }
+        }
+    );
+}
 function showColumn1() {
 
     var select1 = document.getElementById("gradingoption1");
-    var select = document.getElementById("gradingoption2");
+    var select2 = document.getElementById("gradingoption2");
     var select3 = document.getElementById("gradingoption3");
-    select.selectedIndex = 0;
+    select2.selectedIndex = 0;
     select3.selectedIndex = 0;
-    var val2 = select.options[select.selectedIndex].value;
     var val = select1.options[select1.selectedIndex].value;
+    var val2 = select2.options[select2.selectedIndex].value;
+
 
     set_release_button();
     document.getElementById('assignmentTotalform').style.visibility = 'hidden';
@@ -624,198 +646,71 @@ function showColumn1() {
 
     $("#gradingcolumn2").empty();
     $("#gradingcolumn3").empty();
-    $("#gradingoption2").empty();
-    $("#gradingoption3").empty();
 
     if (val == 'assignment') {
-        var option = document.createElement("option");
-        option.text = 'question';
-        option.value = 'question';
-        var defaultOption = document.createElement("option");
-        defaultOption.text = "Select your option";
-        defaultOption.value = '';
-        select.add(defaultOption);
-        select.add(option);
-        $("option[value='']").attr("disabled", "disabled");
-
-
-
-        var third_default_opt = document.createElement("option");
-        third_default_opt.text = 'Select your option';
-        third_default_opt.value = '';
-        select3.add(third_default_opt);
-        $("option[value='']").attr("disabled", "disabled");
-
-        var studentopt = document.createElement("option");
-        studentopt.text = 'student';
-        studentopt.text = 'student';
-        select3.add(studentopt);
-
-
+        makeOptions(select2,['question','']);
+        makeOptions(select3,['student','']);
         pickedAssignments("gradingcolumn1");
     }
-
-
     else if (val == 'chapter') {
-
-        $("#gradingoption2").empty();
-        var defaultOption = document.createElement("option");
-        defaultOption.text = "Select your option";
-        defaultOption.value = '';
-        select.add(defaultOption);
-        $("option[value='']").attr("disabled", "disabled");
-        var option = document.createElement("option");
-        option.text = 'question';
-        option.value = 'question';
-        select.add(option);
-
-        var third_default_opt = document.createElement("option");
-        third_default_opt.text = 'Select your option';
-        third_default_opt.value = '';
-        select3.add(third_default_opt);
-        $("option[value='']").attr("disabled", "disabled");
-
-        var studentopt = document.createElement("option");
-        studentopt.text = 'student';
-        studentopt.text = 'student';
-        select3.add(studentopt);
-
-
-
+        makeOptions(select2,['question','']);
+        makeOptions(select3,['student','']);
         pickedChapters('gradingcolumn1');
     }
-
     else if (val == 'student') {
-        $("#gradingoption2").empty();
-        $("#gradingoption3").empty();
-
-        var defaultOption = document.createElement("option");
-        defaultOption.text = "Select your option";
-        defaultOption.value = '';
-        select.add(defaultOption);
-
-        var thirdDefaultOption = document.createElement("option");
-        thirdDefaultOption.text = "Select your option";
-        thirdDefaultOption.value = '';
-        select3.add(thirdDefaultOption);
-        $("option[value='']").attr("disabled", "disabled");
-        var q = document.createElement("option");
-        q.text = 'question';
-        q.value = 'question';
-        select3.add(q);
-
-        var options = ['chapter', 'assignment'];
-        for (i = 0; i < options.length; i++) {
-            var val = options[i];
-            var option = document.createElement("option");
-            option.text = val;
-            option.value = val;
-            select.add(option);
-        }
-
+        makeOptions(select2,['chapter','assignment','']);
+        makeOptions(select3,['question','']);
         pickedStudents('gradingcolumn1');
     }
-
 }
 
 function showColumn2() {
 
-    var select1 = document.getElementById("gradingoption2");
-    var val = select1.options[select1.selectedIndex].value;
-    var select = document.getElementById("gradingoption1");
-    var first_val = select.options[select.selectedIndex].value;
+    var select1 = document.getElementById("gradingoption1");
+    var select2 = document.getElementById("gradingoption2");
     var select3 = document.getElementById('gradingoption3');
+    var val1 = select1.options[select1.selectedIndex].value;
+    var val2 = select2.options[select2.selectedIndex].value;
     select3.selectedIndex = 0;
-    $("#gradingcolumn3").empty();
 
-
-    if (first_val == "") {
-        select1.selectedIndex = 0;
+    if (val1 == "") {
+        select2.selectedIndex = 0;
         alert("That is not a valid combination");
     }
 
     else {
-        if (val == 'assignment') {
-            $("#gradingoption3").empty();
-            var defaultOption = document.createElement("option");
-            defaultOption.text = "Select your option";
-            defaultOption.value = '';
-            select3.add(defaultOption);
-            $("option[value='']").attr("disabled", "disabled");
-            var option = document.createElement("option");
-            option.text = 'question';
-            option.value = 'question';
-            select3.add(option);
-
-
-            if (first_val == 'assignment') {
+        if (val2 == 'assignment') {
+            makeOptions(select3,["question"]);
+            if (['assignment','chapter'].includes(val1)){
                 alert("That is not a valid combination");
-                select1.selectedIndex = 0;
-
-            }
-            else if (first_val == 'chapter') {
-                alert("That is not a valid combination");
-                select1.selectedIndex = 0;
-
+                select2.selectedIndex = 0;
             }
             else {
                 pickedAssignments("gradingcolumn2");
             }
         }
 
-        else if (val == 'chapter') {
-            $("#gradingoption3").empty();
-            var defaultOption = document.createElement("option");
-            defaultOption.text = "Select your option";
-            defaultOption.value = '';
-            select3.add(defaultOption);
-            $("option[value='']").attr("disabled", "disabled");
-            var option = document.createElement("option");
-            option.text = 'question';
-            option.value = 'question';
-            select3.add(option);
+        else if (val2 == 'chapter') {
+            makeOptions(select3,['question']);
             document.getElementById('assignmentTotalform').style.visibility = 'hidden';
-
-
-            if (first_val == 'assignment') {
+            if (['assignment','chapter'].includes(val1)){
                 alert("That is not a valid combination");
                 $("#gradingcolumn2").empty();
-                select1.selectedIndex = 0;
-
-            }
-
-            else if (first_val == 'chapter') {
-                alert("That is not a valid combination");
-                $("#gradingcolumn2").empty();
-                select1.selectedIndex = 0;
-
+                select2.selectedIndex = 0;
             }
             else {
                 pickedChapters('gradingcolumn2');
             }
         }
 
-        else if (val == 'question') {
-            $("#gradingoption3").empty();
-            var defaultOption = document.createElement("option");
-            defaultOption.text = "Select your option";
-            defaultOption.value = '';
-            select3.add(defaultOption);
-            $("option[value='']").attr("disabled", "disabled");
-            var option = document.createElement("option");
-            option.text = 'student';
-            option.value = 'student';
-            select3.add(option);
-
-
-            var select2 = document.getElementById("gradingcolumn1");
+        else if (val2 == 'question') {
+            makeOptions(select3,['student']);
             var preselected = false;
-            if (select2.selectedIndex != -1) {
-                var selectedval = select2.options[select2.selectedIndex].value;
+            if (select1.selectedIndex != -1) {
+                var selectedval = select1.options[select1.selectedIndex].value;
                 preselected = true;
             }
-
-            if (first_val == 'chapter') {
+            if (['chapter','assignment'].includes(val1)){
                 if (preselected == true) {
                     updateColumn2();
                 }
@@ -823,25 +718,12 @@ function showColumn2() {
                     displayDefaultQuestion('gradingcolumn2');
                 }
             }
-
-
-            else if (first_val == 'assignment') {
-                if (preselected == true) {
-                    updateColumn2();
-                }
-                else {
-                    displayDefaultQuestion('gradingcolumn2');
-                }
-            }
-
             else {
                 alert("That is not a valid combination");
                 $("#gradingcolumn2").empty();
-                select1.selectedIndex = 0;
-
+                select2.selectedIndex = 0;
             }
         }
-
     }
 }
 
@@ -1673,29 +1555,29 @@ function questionBank(form) {
         if (resp == 'Error') {
             alert("An error occured while searching")
         };
-        var select = document.getElementById('qbankselect');
-        select.onchange = getQuestionInfo;
-        var questionform = document.getElementById('questionform');
-        $("#qbankselect").empty();
-        for (i = 0; i < resp.length; i++) {
-            var option = document.createElement("option");
-            option.text = resp[i];
-            option.value = resp[i];
-            option.onclick = getQuestionInfo;
-            select.add(option);
-        }
-        if (resp.length == 0) {
-            select.style.visibility = 'hidden';
-            questionform.style.visibility = 'hidden';
-            var q_info = document.getElementById('questionInfo');
-            q_info.style.visibility = 'hidden';
-            alert("Sorry, no questions matched your search criteria.");
+            var select = document.getElementById('qbankselect');
+            select.onchange = getQuestionInfo;
+            var questionform = document.getElementById('questionform');
+            $("#qbankselect").empty();
+            for (i = 0; i < resp.length; i++) {
+                var option = document.createElement("option");
+                option.text = resp[i];
+                option.value = resp[i];
+                option.onclick = getQuestionInfo;
+                select.add(option);
+            }
+            if (resp.length == 0) {
+                select.style.visibility = 'hidden';
+                questionform.style.visibility = 'hidden';
+                var q_info = document.getElementById('questionInfo');
+                q_info.style.visibility = 'hidden';
+                alert("Sorry, no questions matched your search criteria.");
 
-        }
-        if (resp.length > 0) {
-            select.style.visibility = 'visible';
-            questionform.style.visibility = 'visible';
-        }
+            }
+            if (resp.length > 0) {
+                select.style.visibility = 'visible';
+                questionform.style.visibility = 'visible';
+            }
     });
 }
 
