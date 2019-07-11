@@ -1,65 +1,82 @@
 var assignment_release_states = null;
 
 function gradeIndividualItem() {
-    var select3 = document.getElementById("gradingoption3");
-    var colType = select3.options[select3.selectedIndex].value;
-
-    var col1 = document.getElementById("gradingoption1");
-    var col1val = col1.options[col1.selectedIndex].value;
-
-    var col2 = document.getElementById("gradingoption2");
-    var col2val = col2.options[col2.selectedIndex].value;
+    //This function figures out the parameters to feed to getRightSideGradingDiv, which does most of the work
+    var SEL1 = document.getElementById("gradingoption1");
+    var VAL1 = SEL1.options[SEL1.selectedIndex].value;
+    var SEL2 = document.getElementById("gradingoption2");
+    var VAL2 = SEL2.options[SEL2.selectedIndex].value;
+    var SEL3 = document.getElementById("gradingoption3");
+    var VAL3 = SEL3.options[SEL3.selectedIndex].value;
 
     set_release_button();
 
-    var select = document.getElementById("gradingcolumn3");
-    var val = select.options[select.selectedIndex].value;
+    var COL3 = document.getElementById("gradingcolumn3");
+    var COL3VAL = COL3.options[COL3.selectedIndex].value;
+    
     var rightSideDiv = $('#rightsideGradingTab');
-    if (colType == 'question') {
+    //FIX: This seems so clunky
+    var student_dict=students;
+    var question,sid,student;
+    var questions,sstudents;
+    if (VAL3 == 'question') {
         //we know the student must come from column 1 now
-        document.getElementById("rightsideGradingTab").style.visibility = 'visible';
         var s_column = document.getElementById("gradingcolumn1");
-        if (s_column.selectedIndex != -1) {
-            //make sure they've selected a student from column 1
-            var student = s_column.options[s_column.selectedIndex].value; // TODO .value should be sid not name
-            var student_dict = students;
-            for (var key in student_dict) {
-                if (student_dict[key] == student) {
-                    var sid = key;
-                }
-            }
-
-            getRightSideGradingDiv(rightSideDiv, val, sid);
-
-
-        }
-
+        students=s_column.selectedOptions;
+        questions=COL3.selectedOptions;
+//        if (s_column.selectedIndex == -1) {return}  //make sure they've selected a student from column 1
+//        student = s_column.options[s_column.selectedIndex].value; // TODO .value should be sid not name
+//        question = COL3VAL
     }
 
-    else if (colType == 'student') {
-        if (col1val == 'assignment' && getSelectedItem('assignment') != null) {
+    else if (VAL3 == 'student') {
+        if (VAL1 == 'assignment' && getSelectedItem('assignment') != null) {
             calculateTotals()
         } else {
             document.getElementById('assignmentTotalform').style.visibility = 'hidden';
         }
         //we know the question must come from column 2 now
-        document.getElementById("rightsideGradingTab").style.visibility = 'visible';
         var q_column = document.getElementById("gradingcolumn2");
-        if (q_column.selectedIndex != -1) {
-            //make sure they've selected a question from column 1
-            var question = q_column.options[q_column.selectedIndex].value;
-            var student_dict = students;
+        sstudents=COL3.selectedOptions;
+        questions=q_column.selectedOptions;
+//        if(q_column.selectedIndex==-1){return} //make sure they've selected a question from column 1
+//        question = q_column.options[q_column.selectedIndex].value;
+//        student=COL3VAL
+    }
+
+    $(rightSideDiv)[0].style.visibility = 'visible';
+    rightSideDiv.html(""); //empty it out
+    //Not sure if questions or students should be the outer loop
+    for (var qnum=0;qnum<questions.length;qnum++){
+        question=questions[qnum].value
+        for (var snum=0;snum<sstudents.length;snum++){
+            student=sstudents[snum].value
             for (var key in student_dict) {
-                if (student_dict[key] == val) {
-                    var sid = key;
+                if (student_dict[key] == student) {
+                    sid = key;
                 }
             }
-
-            getRightSideGradingDiv(rightSideDiv, question, sid);
-
-
+            if(!sid){continue}
+            var newid="Q"+question+"S"+sid;
+            
+            //This creates the equivalent of outerRightDiv for each question and student
+            var divstring='<div style="border:1px solid;padding:5px;margin:5px;" id="'+newid+'">';
+            divstring+='<h4 id="rightTitle"></h4><div id="questiondisplay">Question Display</div>'
+            divstring+='<div style="display:none" id="shortanswerresponse"></div>'
+            divstring+='<div id="gradingform"><form>'
+            divstring+='<label for="input-grade">Grade</label>'
+            divstring+='<input id="input-grade" type="text" class="form-control" value="" />'
+            divstring+='<label for="input-comments">Comments</label>'
+            divstring+='<input id="input-comments" type="text" class="form-control" value="" />'
+            divstring+='<input type="submit" value="Save Grade" class="btn btn-primary" /></form>'
+            divstring+='<button class="btn btn-default next" type="button">Save and next</button></div>'
+            divstring+='</div></div>'
+            rightSideDiv.append(divstring) //FIX: Add the entire 
+            var newdiv=$("#"+newid)
+            console.log(newid)
+            console.log(newdiv)
+            getRightSideGradingDiv(newdiv, question, sid);
         }
-
     }
 }
 
@@ -237,8 +254,7 @@ function getRightSideGradingDiv(element, acid, studentId) {
         alert("Can't grade without a URL");
         return false;
     }
-
-
+    var elementID=$(element)[0].id; //some of this might be redundant
     //make an ajax call to get the htmlsrc for the given question
     var obj = new XMLHttpRequest();
     obj.open("GET", "/runestone/admin/htmlsrc/?acid=" + acid, true);
@@ -246,19 +262,19 @@ function getRightSideGradingDiv(element, acid, studentId) {
     obj.onreadystatechange = function () {
         if (obj.readyState == 4 && obj.status == 200) {
             var htmlsrc = JSON.parse(obj.responseText);
-            //jQuery("#questiondisplay").html(htmlsrc);
             var enforceDeadline = $('#enforceDeadline').is(':checked');
             var dl = new Date(assignment_deadlines[getSelectedItem("assignment")]);
-            renderRunestoneComponent(htmlsrc, "questiondisplay", { sid: studentId, graderactive: true, enforceDeadline: enforceDeadline, deadline: dl });
+            renderRunestoneComponent(htmlsrc, elementID+">#questiondisplay", { sid: studentId, graderactive: true, enforceDeadline: enforceDeadline, deadline: dl });
         }
 
     };
 
 
-
+    //this is an internal function for getRightSideGradingDiv
     function save(event) {
         event.preventDefault();
 
+//        if (form==undefined){form=$(this);} //This might be redundant
         var form = jQuery(this);
         var grade = jQuery('#input-grade', form).val();
         var comment = jQuery('#input-comments', form).val();
@@ -284,14 +300,17 @@ function getRightSideGradingDiv(element, acid, studentId) {
         // get rid of any other modals -- incase they are just hanging out.
         //jQuery('.modal.modal-grader:not(#modal-template .modal)').remove();
 
-        var rightDiv = jQuery('#outerRightDiv');
+        //FIX: this shouldn't assume there is a single outerRightDiv, but look for children of a div
+        //Replace #outerRightDiv
+
+        var rightDiv = jQuery(element);
 
         jQuery('#gradingform', rightDiv).remove();
         var newForm = document.createElement('form');
         newForm.setAttribute('id', 'gradingform');
         formstr = '<form> <label for="input-grade">Grade</label> <input id="input-grade" type="text" class="form-control" value= ""/> <label for="input-comments">Comments</label> <input id="input-comments" type="text" class="form-control" value="" /> <input type="submit" value="Save Grade" class="btn btn-primary" /> </form> <button class="btn btn-default next" type="button">Save and next</button>';
         newForm.innerHTML = formstr;
-        document.getElementById("outerRightDiv").appendChild(newForm);
+        rightDiv[0].appendChild(newForm);
 
         jQuery('#rightTitle', rightDiv).html(data.name + ' <em>' + data.acid + '</em> <span>Points: ' + question_points[data.acid] + '</span>');
 
@@ -302,7 +321,7 @@ function getRightSideGradingDiv(element, acid, studentId) {
             var file_div_template = '<pre id="file_div_template" style = "display:none;">template text</pre>;'
             var index;
             for (index = 0; index < data.file_includes.length; index += 1) {
-                if (jQuery('#' + data.file_includes[index].acid).length == 0) {
+                if (jQuery('#' + data.file_includes[index].acid,rightDiv).length == 0) {
                     // doesn't exist yet, so add it.
                     jQuery('body').append(file_div_template);
                     jQuery('#file_div_template').text(data.file_includes[index].contents);
@@ -434,7 +453,7 @@ function populateQuestions(select,question_names){
             }
             questiontext="   "+qL[1];
         } else {
-            questiontext=qL[0];
+            questiontext=q;
         };
             select.add(makeOption(questiontext,question_names[i]));
     }
@@ -1472,7 +1491,7 @@ function renderRunestoneComponent(componentSrc, whereDiv, moreOpts) {
      *  The tedious part is calling the right functions to turn the
      *  source into the actual component.
      */
-
+    //FIX? I have to make sure this doesn't use any absolute references
     patt = /..\/_images/g;
     componentSrc = componentSrc.replace(patt, `/${eBookConfig.app}/static/${eBookConfig.course}/_images`)
     jQuery(`#${whereDiv}`).html(componentSrc);
